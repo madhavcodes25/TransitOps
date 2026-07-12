@@ -100,3 +100,20 @@ function setupGlobalSearch() {
         });
     });
 }
+
+// Function to update header with logged-in user data
+function updateUserInfo() {
+    const username = localStorage.getItem("transitops_user");
+    const role = localStorage.getItem("transitops_role");
+
+    const userEl = document.getElementById("nav-username");
+    const roleEl = document.getElementById("nav-role");
+
+    if (userEl) userEl.textContent = username || "Guest";
+    if (roleEl) roleEl.textContent = role || "N/A";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    checkAuth();
+    updateUserInfo();
+});
