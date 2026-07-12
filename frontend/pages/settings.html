@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - TransitOps</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+
+    <div class="d-flex" style="min-height: 100vh;">
+
+        <!-- ================= SIDEBAR ================= -->
+        <div class="bg-body-tertiary border-end d-flex flex-column" style="width: 250px;">
+            <div class="p-4 border-bottom">
+                <h4 class="text-primary mb-0 fw-bold">TransitOps</h4>
+            </div>
+            <ul class="nav flex-column mt-3 px-2 flex-grow-1">
+                <li class="nav-item mb-1"><a href="dashboard.html" class="nav-link text-body-secondary">Dashboard</a>
+                </li>
+                <li class="nav-item mb-1"><a href="vehicles.html" class="nav-link text-body-secondary">Fleet</a></li>
+                <li class="nav-item mb-1"><a href="drivers.html" class="nav-link text-body-secondary">Drivers</a></li>
+                <li class="nav-item mb-1"><a href="trips.html" class="nav-link text-body-secondary">Trips</a></li>
+                <li class="nav-item mb-1"><a href="maintenance.html"
+                        class="nav-link text-body-secondary">Maintenance</a></li>
+                <li class="nav-item mb-1"><a href="fuel.html" class="nav-link text-body-secondary">Fuel & Expenses</a>
+                </li>
+                <li class="nav-item mb-1"><a href="reports.html" class="nav-link text-body-secondary">Analytics</a></li>
+                <li class="nav-item mb-1 mt-auto">
+                    <a href="settings.html" class="nav-link active text-white bg-primary rounded">Settings</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- ================= MAIN CONTENT ================= -->
+        <div class="flex-grow-1 d-flex flex-column bg-body">
+
+            <nav class="navbar border-bottom px-4 py-3 bg-body-tertiary">
+                <span class="fs-5 fw-semibold">8. Settings & RBAC</span>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="me-3 fw-semibold" id="nav-username">Raven K.</span>
+                    <span class="badge bg-secondary rounded-pill px-3 py-2 me-3" id="nav-role">Dispatcher</span>
+                    <button class="btn btn-sm btn-outline-danger fw-bold" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+
+            <div class="p-4 overflow-auto">
+                <div class="row g-5">
+
+                    <!-- LEFT COLUMN: General Settings -->
+                    <div class="col-lg-4">
+                        <h6 class="text-uppercase text-muted mb-3">General</h6>
+                        <div class="card border-0 shadow-sm bg-body-tertiary p-3">
+                            <form id="settingsForm">
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Depot Name</label>
+                                    <input type="text" class="form-control bg-body border-secondary" id="set-depot"
+                                        value="Gandhinagar Depot GJ4">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Currency</label>
+                                    <select class="form-select bg-body border-secondary" id="set-currency">
+                                        <option value="INR" selected>INR (Rs)</option>
+                                        <option value="USD">USD ($)</option>
+                                        <option value="EUR">EUR (€)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label class="form-label small text-muted">Distance Unit</label>
+                                    <select class="form-select bg-body border-secondary" id="set-distance">
+                                        <option value="km" selected>Kilometers</option>
+                                        <option value="mi">Miles</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-primary w-100 fw-bold">Save changes</button>
+                            </form>
+
+                            <!-- Success Message (Hidden by default) -->
+                            <div class="alert alert-success d-none mt-3 py-2 small" id="settings-success">
+                                Settings saved successfully!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: RBAC Matrix -->
+                    <div class="col-lg-8">
+                        <h6 class="text-uppercase text-muted mb-3">Role-Based Access (RBAC)</h6>
+                        <div class="card border-0 shadow-sm">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-borderless mb-0 align-middle text-center">
+                                    <thead class="table-dark text-uppercase small text-muted">
+                                        <tr>
+                                            <th class="text-start">Role</th>
+                                            <th>Fleet</th>
+                                            <th>Drivers</th>
+                                            <th>Trips</th>
+                                            <th>Fuel/Exp.</th>
+                                            <th>Analytics</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-start fw-medium">Fleet Manager</td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                            <td class="text-muted">—</td>
+                                            <td class="text-muted">—</td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-start fw-medium">Dispatcher</td>
+                                            <td><span class="badge bg-secondary">View</span></td>
+                                            <td class="text-muted">—</td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                            <td class="text-muted">—</td>
+                                            <td class="text-muted">—</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-start fw-medium">Safety Officer</td>
+                                            <td class="text-muted">—</td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                            <td><span class="badge bg-secondary">View</span></td>
+                                            <td class="text-muted">—</td>
+                                            <td class="text-muted">—</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-start fw-medium">Financial Analyst</td>
+                                            <td><span class="badge bg-secondary">View</span></td>
+                                            <td class="text-muted">—</td>
+                                            <td class="text-muted">—</td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                            <td><span class="text-success fw-bold">✓</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-3">
+                            Note: For this hackathon demo, role permissions are enforced via frontend logic. Changes to
+                            the matrix require admin backend access.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script>
+        checkAuth();
+
+        // Quick script to handle the Save button simulation
+        document.getElementById('settingsForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const successMsg = document.getElementById('settings-success');
+            successMsg.classList.remove('d-none');
+
+            // Hide the message after 3 seconds
+            setTimeout(() => {
+                successMsg.classList.add('d-none');
+            }, 3000);
+        });
+    </script>
+</body>
+
+</html>

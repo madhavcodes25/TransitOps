@@ -1,0 +1,53 @@
+:root {
+    /* Core Odoo Brand Colors */
+    --odoo-aubergine: #714B67;
+    --odoo-teal: #017E84;
+    --odoo-teal-light: #00A09D;
+    --odoo-bg-light: #F9F9FB;
+
+    --bs-primary: var(--odoo-aubergine);
+    --bs-primary-rgb: 113, 75, 103;
+    
+    --bs-secondary: var(--odoo-teal);
+    --bs-secondary-rgb: 1, 126, 132;
+    
+    --bs-info: var(--odoo-teal-light);
+    
+    --bs-body-bg: var(--odoo-bg-light);
+}
+
+/* ==========================================
+   Odoo Brand Colors - Dark Mode
+   ========================================== */
+[data-bs-theme="dark"] {
+    --odoo-aubergine-bright: #9F6A91; 
+    --odoo-teal-bright: #00C3BF;
+    --odoo-bg-dark: #1A1A1A;     
+    --odoo-surface-dark: #262626; 
+
+    --bs-primary: var(--odoo-aubergine-bright);
+    --bs-primary-rgb: 159, 106, 145;
+    
+    --bs-secondary: var(--odoo-teal-bright);
+    --bs-secondary-rgb: 0, 195, 191;
+    
+    --bs-body-bg: var(--odoo-bg-dark);
+    --bs-body-color: #E0E0E0;
+
+    --bs-card-bg: var(--odoo-surface-dark);
+    --bs-tertiary-bg: var(--odoo-surface-dark);
+    --bs-border-color: #333333;
+}
+
+/* ==========================================
+   Custom Utility Classes 
+   ========================================== */
+.btn-odoo-primary {
+    background-color: #714B67;
+    color: white;
+    border: none;
+}
+.btn-odoo-primary:hover {
+    background-color: #5A3C52;
+    color: white;
+}

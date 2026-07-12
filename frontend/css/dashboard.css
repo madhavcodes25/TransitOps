@@ -1,0 +1,19 @@
+.nav-link {
+    transition: all 0.2s ease-in-out;
+}
+
+.nav-link:hover {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-primary) !important;
+}
+
+.card h3 {
+    letter-spacing: -0.5px;
+}
+
+.table-borderless tbody tr {
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.table-borderless tbody tr:last-child {
+    border-bottom: none;
+}

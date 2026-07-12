@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Dispatcher - TransitOps</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+
+<body>
+
+    <div class="d-flex" style="min-height: 100vh;">
+
+        <!-- ================= SIDEBAR ================= -->
+        <div class="bg-body-tertiary border-end d-flex flex-column" style="width: 250px;">
+            <div class="p-4 border-bottom">
+                <h4 class="text-primary mb-0 fw-bold">TransitOps</h4>
+            </div>
+            <ul class="nav flex-column mt-3 px-2 flex-grow-1">
+                <li class="nav-item mb-1"><a href="dashboard.html" class="nav-link text-body-secondary">Dashboard</a>
+                </li>
+                <li class="nav-item mb-1"><a href="vehicles.html" class="nav-link text-body-secondary">Fleet</a></li>
+                <li class="nav-item mb-1"><a href="drivers.html" class="nav-link text-body-secondary">Drivers</a></li>
+                <li class="nav-item mb-1">
+                    <a href="trips.html" class="nav-link active text-white bg-primary rounded">Trips</a>
+                </li>
+                <li class="nav-item mb-1"><a href="maintenance.html"
+                        class="nav-link text-body-secondary">Maintenance</a></li>
+                <li class="nav-item mb-1"><a href="fuel.html" class="nav-link text-body-secondary">Fuel & Expenses</a>
+                </li>
+                <li class="nav-item mb-1"><a href="reports.html" class="nav-link text-body-secondary">Analytics</a></li>
+                <li class="nav-item mb-1 mt-auto"><a href="settings.html"
+                        class="nav-link text-body-secondary">Settings</a></li>
+            </ul>
+        </div>
+
+        <!-- ================= MAIN CONTENT ================= -->
+        <div class="flex-grow-1 d-flex flex-column bg-body">
+
+            <nav class="navbar border-bottom px-4 py-3 bg-body-tertiary">
+                <span class="fs-5 fw-semibold">4. Trip Dispatcher</span>
+                <div class="ms-auto d-flex align-items-center">
+                    <span class="me-3 fw-semibold" id="nav-username">Raven K.</span>
+                    <span class="badge bg-secondary rounded-pill px-3 py-2 me-3" id="nav-role">Dispatcher</span>
+                    <button class="btn btn-sm btn-outline-danger fw-bold" onclick="logout()">Logout</button>
+                </div>
+            </nav>
+
+            <div class="p-4 overflow-auto">
+                <div class="row g-4">
+
+                    <!-- LEFT COLUMN: Create Trip Form -->
+                    <div class="col-lg-5">
+                        <h6 class="text-uppercase text-muted mb-3">Create Trip</h6>
+                        <div class="card border-0 shadow-sm bg-body-tertiary p-3">
+                            <form id="createTripForm">
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Source</label>
+                                    <input type="text" class="form-control bg-body border-secondary" id="trip-source"
+                                        required placeholder="e.g. Gandhinagar Depot">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Destination</label>
+                                    <input type="text" class="form-control bg-body border-secondary" id="trip-dest"
+                                        required placeholder="e.g. Ahmedabad Hub">
+                                </div>
+
+                                <!-- Filtered Dropdowns -->
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Vehicle (Available Only)</label>
+                                    <select class="form-select bg-body border-secondary" id="trip-vehicle" required>
+                                        <option value="">Select a vehicle...</option>
+                                        <!-- JS injects available vehicles here -->
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">Driver (Available Only)</label>
+                                    <select class="form-select bg-body border-secondary" id="trip-driver" required>
+                                        <option value="">Select a driver...</option>
+                                        <!-- JS injects available drivers here -->
+                                    </select>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <label class="form-label small text-muted">Cargo Weight (kg)</label>
+                                        <input type="number" class="form-control bg-body border-secondary"
+                                            id="trip-weight" required>
+                                    </div>
+                                    <div class="col">
+                                        <label class="form-label small text-muted">Planned Distance (km)</label>
+                                        <input type="number" class="form-control bg-body border-secondary"
+                                            id="trip-distance" required>
+                                    </div>
+                                </div>
+
+                                <!-- Live Validation Error Box -->
+                                <div class="alert alert-danger d-none border-danger py-2 mb-3" id="capacity-error">
+                                    <div class="small fw-bold">Vehicle Capacity: <span id="max-cap-display">0</span> kg
+                                    </div>
+                                    <div class="small text-danger mt-1">❌ Capacity exceeded by <span
+                                            id="overage-display">0</span> kg — dispatch blocked.</div>
+                                </div>
+
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="button" class="btn btn-outline-secondary w-50"
+                                        id="btn-cancel">Clear</button>
+                                    <button type="submit" class="btn btn-primary w-50 fw-bold" id="btn-dispatch"
+                                        disabled>Dispatch Trip</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT COLUMN: Live Board -->
+                    <div class="col-lg-7">
+                        <h6 class="text-uppercase text-muted mb-3">Live Board</h6>
+                        <div id="live-board-container" class="d-flex flex-column gap-3">
+                            <!-- JS injects active trip cards here -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/auth.js"></script>
+    <script src="../js/trips.js"></script>
+    <script>
+        checkAuth();
+    </script>
+</body>
+
+</html>
