@@ -1,6 +1,7 @@
 package com.transitops.backend.service;
 
 import com.transitops.backend.entity.Vehicle;
+import com.transitops.backend.exception.ResourceNotFoundException;
 import com.transitops.backend.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,10 @@ public class VehicleService {
         return vehicleRepository.findAll();
     }
 
-    public Optional<Vehicle> getVehicleById(Long id) {
-        return vehicleRepository.findById(id);
+    public Vehicle getVehicleById(Long id) {
+        return vehicleRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Vehicle not found with id " + id));
     }
 
     public Vehicle saveVehicle(Vehicle vehicle) {
@@ -41,7 +44,7 @@ public class VehicleService {
 
                     return vehicleRepository.save(vehicle);
                 })
-                .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found"));
     }
 
     public void deleteVehicle(Long id) {

@@ -5,7 +5,6 @@ import com.transitops.backend.service.FuelLogService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/fuel")
@@ -23,7 +22,7 @@ public class FuelLogController {
     }
 
     @GetMapping("/{id}")
-    public Optional<FuelLog> getFuelLogById(@PathVariable Long id) {
+    public FuelLog getFuelLogById(@PathVariable Long id) {
         return service.getFuelLogById(id);
     }
 

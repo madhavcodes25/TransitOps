@@ -5,7 +5,6 @@ import com.transitops.backend.service.MaintenanceLogService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/maintenance")
@@ -23,7 +22,7 @@ public class MaintenanceLogController {
     }
 
     @GetMapping("/{id}")
-    public Optional<MaintenanceLog> getLog(@PathVariable Long id) {
+    public MaintenanceLog getLog(@PathVariable Long id) {
         return service.getLogById(id);
     }
 

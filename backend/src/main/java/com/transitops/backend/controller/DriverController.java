@@ -5,7 +5,6 @@ import com.transitops.backend.service.DriverService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/drivers")
@@ -23,7 +22,7 @@ public class DriverController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Driver> getDriverById(@PathVariable Long id) {
+    public Driver getDriverById(@PathVariable Long id) {
         return driverService.getDriverById(id);
     }
 

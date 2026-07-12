@@ -5,7 +5,6 @@ import com.transitops.backend.service.TripService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/trips")
@@ -23,7 +22,7 @@ public class TripController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Trip> getTripById(@PathVariable Long id) {
+    public Trip getTripById(@PathVariable Long id) {
         return tripService.getTripById(id);
     }
 
