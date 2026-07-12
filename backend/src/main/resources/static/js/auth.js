@@ -34,9 +34,48 @@ if (loginForm) {
     });
 }
 
+// ===== REGISTER FORM WIRING (only runs if registerForm exists on the page) =====
+const registerForm = document.getElementById("registerForm");
+if (registerForm) {
+    registerForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById("name").value;
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const role = document.getElementById("role").value;
+
+        const errorBox = document.getElementById("register-error");
+        const errorText = document.getElementById("register-error-text");
+        errorBox.classList.add("d-none");
+
+        try {
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password, role })
+            });
+
+            if (!response.ok) {
+                errorText.textContent = "❌ Registration failed. Email may already be in use.";
+                errorBox.classList.remove("d-none");
+                return;
+            }
+
+            // Registration succeeded - send them to login to sign in with their new account
+            window.location.href = "login.html";
+
+        } catch (err) {
+            console.error("Registration request failed:", err);
+            errorText.textContent = "❌ Network error - couldn't reach the server.";
+            errorBox.classList.remove("d-none");
+        }
+    });
+}
+
 // ===== SHARED HELPERS FOR ALL PROTECTED PAGES =====
 
-// Redirects to log in if no token is present. Call this on every protected page.
+// Redirects to login if no token is present. Call this on every protected page.
 function checkAuth() {
     const token = localStorage.getItem("token");
     if (!token) {

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - TransitOps</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="bg-body d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="text-center mb-4">
+                <h2 class="text-primary fw-bold mb-1">TransitOps</h2>
+                <p class="text-muted small">Smart Transport Operations Platform</p>
+            </div>
+
+            <div class="card shadow-lg border-0 bg-body-tertiary">
+                <div class="card-body p-4 p-sm-5">
+                    <h5 class="text-center mb-2 fw-semibold">Create an account</h5>
+                    <p class="text-center text-muted small mb-4">Register to access the platform</p>
+
+                    <div class="alert alert-danger d-none py-2 mb-4 border-danger" id="register-error" role="alert">
+                        <div class="small fw-bold" id="register-error-text">❌ Registration failed.</div>
+                    </div>
+
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="name" class="form-label small text-muted text-uppercase">Full Name</label>
+                            <input type="text" class="form-control bg-body border-secondary" id="name" required placeholder="Raven Kapoor">
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label small text-muted text-uppercase">Email</label>
+                            <input type="email" class="form-control bg-body border-secondary" id="email" required placeholder="raven.k@transitops.in">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label small text-muted text-uppercase">Password</label>
+                            <input type="password" class="form-control bg-body border-secondary" id="password" required placeholder="••••••••" minlength="6">
+                        </div>
+                        <div class="mb-4">
+                            <label for="role" class="form-label small text-muted text-uppercase">Role</label>
+                            <select class="form-select bg-body border-secondary" id="role" required>
+                                <option value="ADMIN">Admin</option>
+                                <option value="FLEET_MANAGER" selected>Fleet Manager</option>
+                                <option value="DISPATCHER">Dispatcher</option>
+                                <option value="SAFETY_OFFICER">Safety Officer</option>
+                                <option value="FINANCIAL_ANALYST">Financial Analyst</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100 text-dark fw-bold py-2">Create Account</button>
+                    </form>
+
+                    <p class="text-center text-muted small mt-4 mb-0">
+                        Already have an account? <a href="login.html" class="text-info text-decoration-none">Sign in</a>
+                    </p>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <small class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 1px;">TRANSITOPS © 2026 • RBAC ENABLED</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Global Toast Notification Container -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+    <div id="liveToast" class="toast align-items-center border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-medium text-white" id="toastMessage"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/auth.js"></script>
+</body>
+</html>
