@@ -14,7 +14,7 @@
 
 <body>
 
-    <!-- ================= MOBILE TOP BAR (Hidden on Desktop) ================= -->
+    <!-- ================= MOBILE TOP BAR ================= -->
     <div class="d-md-none d-flex align-items-center justify-content-between p-3 border-bottom bg-body-tertiary">
         <h5 class="text-primary fw-bold mb-0">TransitOps</h5>
         <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas"
@@ -29,22 +29,19 @@
         <div class="offcanvas-md offcanvas-start bg-body-tertiary border-end d-flex flex-column" tabindex="-1"
             id="sidebarMenu" style="width: 250px;">
 
-            <!-- Mobile Sidebar Header -->
             <div class="offcanvas-header d-md-none border-bottom p-4">
                 <h5 class="offcanvas-title text-primary fw-bold">TransitOps</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-                    data-bs-target="#sidebarMenu" aria-label="Close"></button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="offcanvas"
+                    aria-label="Close">Close ✕</button>
             </div>
 
-            <!-- Desktop Sidebar Header -->
             <div class="p-4 border-bottom d-none d-md-block">
                 <h4 class="text-primary mb-0 fw-bold">TransitOps</h4>
             </div>
 
             <ul class="nav flex-column mt-3 px-2 flex-grow-1">
-                <li class="nav-item mb-1">
-                    <a href="dashboard.html" class="nav-link active text-white bg-primary rounded">Dashboard</a>
-                </li>
+                <li class="nav-item mb-1"><a href="dashboard.html"
+                        class="nav-link active text-white bg-primary rounded">Dashboard</a></li>
                 <li class="nav-item mb-1"><a href="vehicles.html" class="nav-link text-body-secondary">Fleet</a></li>
                 <li class="nav-item mb-1"><a href="drivers.html" class="nav-link text-body-secondary">Drivers</a></li>
                 <li class="nav-item mb-1"><a href="trips.html" class="nav-link text-body-secondary">Trips</a></li>
@@ -59,14 +56,10 @@
         </div>
 
         <!-- ================= MAIN CONTENT ================= -->
-        <!-- Added overflow-hidden to prevent tables from stretching the mobile screen -->
         <div class="flex-grow-1 d-flex flex-column bg-body overflow-hidden">
 
             <!-- TOP NAVIGATION -->
             <nav class="navbar border-bottom px-3 py-3 bg-body-tertiary">
-                <input type="text" class="form-control w-auto bg-body border-secondary d-none d-md-block"
-                    placeholder="Search..." style="max-width: 250px;">
-
                 <div class="ms-auto d-flex align-items-center">
                     <span class="me-3 fw-semibold d-none d-sm-block" id="nav-username">Raven K.</span>
                     <span class="badge bg-secondary rounded-pill px-3 py-2 me-3" id="nav-role">Dispatcher</span>
@@ -79,20 +72,19 @@
 
                 <!-- Filters -->
                 <div class="d-flex gap-3 mb-4">
-                    <select class="form-select w-auto bg-body-tertiary">
+                    <select class="form-select w-auto bg-body-tertiary" id="filter-type">
                         <option>Vehicle Type: All</option>
                     </select>
-                    <select class="form-select w-auto bg-body-tertiary">
+                    <select class="form-select w-auto bg-body-tertiary" id="filter-status">
                         <option>Status: All</option>
                     </select>
-                    <select class="form-select w-auto bg-body-tertiary">
+                    <select class="form-select w-auto bg-body-tertiary" id="filter-region">
                         <option>Region: All</option>
                     </select>
                 </div>
 
                 <!-- KPI Cards -->
                 <div class="row g-3 mb-4">
-                    <!-- KPI 1 -->
                     <div class="col-12 col-sm-6 col-xl">
                         <div class="card h-100 border-top border-3 border-primary shadow-sm">
                             <div class="card-body">
@@ -101,7 +93,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- KPI 2 -->
                     <div class="col-12 col-sm-6 col-xl">
                         <div class="card h-100 border-top border-3 border-success shadow-sm">
                             <div class="card-body">
@@ -110,7 +101,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- KPI 3 -->
                     <div class="col-12 col-sm-6 col-xl">
                         <div class="card h-100 border-top border-3 border-warning shadow-sm">
                             <div class="card-body">
@@ -119,7 +109,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- KPI 4 -->
                     <div class="col-12 col-sm-6 col-xl">
                         <div class="card h-100 border-top border-3 border-info shadow-sm">
                             <div class="card-body">
@@ -128,7 +117,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- KPI 5 -->
                     <div class="col-12 col-sm-6 col-xl">
                         <div class="card h-100 border-top border-3 border-secondary shadow-sm">
                             <div class="card-body">
@@ -145,7 +133,7 @@
                     <div class="col-md-8">
                         <h6 class="text-uppercase text-muted mb-3">Recent Trips</h6>
                         <div class="table-responsive card border-0 shadow-sm">
-                            <table class="table table-hover table-borderless mb-0 align-middle">
+                            <table class="table table-hover table-borderless mb-0 align-middle" id="tripsTable">
                                 <thead class="table-dark">
                                     <tr>
                                         <th>Trip ID</th>
@@ -178,24 +166,21 @@
                         <div class="card border-0 shadow-sm p-3">
                             <div class="mb-3">
                                 <div class="d-flex justify-content-between small mb-1">
-                                    <span>Available</span><span>42</span>
-                                </div>
+                                    <span>Available</span><span>42</span></div>
                                 <div class="progress" style="height: 8px;">
                                     <div class="progress-bar bg-success" style="width: 70%"></div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between small mb-1">
-                                    <span>On Trip</span><span>18</span>
-                                </div>
+                                <div class="d-flex justify-content-between small mb-1"><span>On
+                                        Trip</span><span>18</span></div>
                                 <div class="progress" style="height: 8px;">
                                     <div class="progress-bar bg-info" style="width: 20%"></div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <div class="d-flex justify-content-between small mb-1">
-                                    <span>In Shop</span><span>5</span>
-                                </div>
+                                <div class="d-flex justify-content-between small mb-1"><span>In
+                                        Shop</span><span>5</span></div>
                                 <div class="progress" style="height: 8px;">
                                     <div class="progress-bar bg-warning" style="width: 10%"></div>
                                 </div>
@@ -203,18 +188,28 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Global Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+        <div id="liveToast" class="toast align-items-center border-0 shadow-lg" role="alert" aria-live="assertive"
+            aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-medium text-white" id="toastMessage"></div><button type="button"
+                    class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/dashboard.js"></script>
     <script>
-        // Enforce login immediately on page load
-        checkAuth();
+        document.addEventListener("DOMContentLoaded", () => {
+            checkAuth();
+        });
     </script>
 </body>
 

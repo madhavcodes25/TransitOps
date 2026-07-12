@@ -62,3 +62,41 @@ function logout() {
     // Redirect to login
     window.location.href = "login.html";
 }
+
+// Global Toast Notification Utility
+function showToast(message, type = 'success') {
+    const toastEl = document.getElementById('liveToast');
+    const toastBody = document.getElementById('toastMessage');
+    
+    if (!toastEl) return; // Failsafe if toast HTML isn't on the page
+
+    // Reset classes and apply the Odoo-style colors based on success/error
+    toastEl.className = `toast align-items-center border-0 shadow-lg text-white ${type === 'success' ? 'bg-success' : 'bg-danger'}`;
+    
+    // Set the message
+    toastBody.innerHTML = message;
+    
+    // Initialize and show via Bootstrap's JS API
+    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+    toast.show();
+}
+
+// Global Table Filter
+function setupGlobalSearch() {
+    const searchInput = document.querySelector('input[placeholder="Search..."]');
+    if (!searchInput) return;
+
+    searchInput.addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const table = document.querySelector('table');
+        if (!table) return;
+
+        const rows = table.querySelectorAll('tbody tr');
+
+        rows.forEach(row => {
+            // Get all text content in the row and check if it includes the search term
+            const rowText = row.innerText.toLowerCase();
+            row.style.display = rowText.includes(searchTerm) ? '' : 'none';
+        });
+    });
+}

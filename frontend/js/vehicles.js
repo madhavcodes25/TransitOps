@@ -1,5 +1,5 @@
 // 1. Mock Master Data
-const mockVehicles = [
+let mockVehicles = [
     { regNo: "GJ01AB452", model: "VAN-05", type: "Van", capacity: "500 kg", odometer: "74,000", cost: "6,20,000", status: "Available" },
     { regNo: "GJ01AB998", model: "TRUCK-11", type: "Truck", capacity: "5 Ton", odometer: "182,000", cost: "24,50,000", status: "On Trip" },
     { regNo: "GJ01AB1120", model: "MINI-03", type: "Mini", capacity: "1 Ton", odometer: "66,000", cost: "4,10,000", status: "In Shop" },
@@ -9,6 +9,11 @@ const mockVehicles = [
 // 2. Initialization
 document.addEventListener("DOMContentLoaded", () => {
     renderVehicles(mockVehicles);
+
+    // Add Event Listeners for Filters
+    document.getElementById('search-reg').addEventListener('keyup', filterVehicles);
+    document.getElementById('filter-type').addEventListener('change', filterVehicles);
+    document.getElementById('filter-status').addEventListener('change', filterVehicles);
 });
 
 // 3. Render Function
@@ -84,4 +89,27 @@ document.getElementById('addVehicleForm').addEventListener('submit', function (e
     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addVehicleModal'));
     modalInstance.hide();
     this.reset();
+
+    // Trigger Toast Notification (Assuming showToast is defined in your main JS/auth.js)
+    if (typeof showToast === 'function') {
+        showToast(`Vehicle ${regInput} added to fleet!`, 'success');
+    }
 });
+
+// 5. Filter Logic
+function filterVehicles() {
+    const searchVal = document.getElementById('search-reg').value.toLowerCase();
+    const typeVal = document.getElementById('filter-type').value;
+    const statusVal = document.getElementById('filter-status').value;
+
+    const filtered = mockVehicles.filter(v => {
+        const matchesSearch = v.regNo.toLowerCase().includes(searchVal) || 
+                              v.model.toLowerCase().includes(searchVal);
+        const matchesType = (typeVal === "All" || v.type === typeVal);
+        const matchesStatus = (statusVal === "All" || v.status === statusVal);
+
+        return matchesSearch && matchesType && matchesStatus;
+    });
+
+    renderVehicles(filtered);
+}

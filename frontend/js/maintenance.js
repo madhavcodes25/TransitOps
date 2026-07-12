@@ -60,17 +60,21 @@ document.getElementById('maintenanceForm').addEventListener('submit', function (
     renderMaintenanceLogs();
     this.reset();
     document.getElementById('maint-date').valueAsDate = new Date(); // Reset date
+
+    showToast(`Service record logged for ${vehicle}.`, 'success');
 });
 
 // 4. Handle Closing a Record
 window.closeRecord = function (index) {
-    // Update log status
+    // 1. Update log status
     mockMaintenanceLogs[index].status = "Completed";
 
-    // Trigger business rule for the specific vehicle
+    // 2. Trigger business logic
     const vehicle = mockMaintenanceLogs[index].vehicle;
-    console.log(`[API Trigger] Maintenance closed. Vehicle ${vehicle} restored to Available.`);
+    
+    // 3. Provide user feedback
+    showToast(`Service for ${vehicle} completed.`, 'success');
 
-    // Re-render
+    // 4. Re-render
     renderMaintenanceLogs();
 };

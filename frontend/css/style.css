@@ -51,3 +51,10 @@
     background-color: #5A3C52;
     color: white;
 }
+
+.toast.bg-success {
+    background-color: #017E84 !important; /* Matches Odoo Teal */
+}
+.toast.bg-danger {
+    background-color: #d9534f !important; /* Bootstrap Danger Red */
+}

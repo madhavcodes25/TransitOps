@@ -1,5 +1,4 @@
 // 1. Unified Mock Data
-// We add a 'capacityKg' field to make the math easier for our validation engine.
 const mockVehicles = [
     { id: 1, regNo: "VAN-05", model: "VAN-05", capacityKg: 500, status: "Available" },
     { id: 2, regNo: "TRUCK-11", model: "TRUCK-11", capacityKg: 5000, status: "On Trip" },
@@ -37,15 +36,19 @@ document.addEventListener("DOMContentLoaded", () => {
     // Listeners for live validation
     vehicleSelect.addEventListener('change', validateDispatch);
     weightInput.addEventListener('input', validateDispatch);
+
+    // Cancel Button functionality
+    document.getElementById('btn-cancel').addEventListener('click', () => {
+        document.getElementById('createTripForm').reset();
+        validateDispatch(); 
+    });
 });
 
 // 4. Populate Dropdowns (Applying Business Rules)
 function populateDropdowns() {
-    // Clear existing
     vehicleSelect.innerHTML = '<option value="">Select a vehicle...</option>';
     driverSelect.innerHTML = '<option value="">Select a driver...</option>';
 
-    // Filter rule: Only "Available" entities
     const availableVehicles = mockVehicles.filter(v => v.status === "Available");
     const availableDrivers = mockDrivers.filter(d => d.status === "Available");
 
@@ -63,7 +66,7 @@ function validateDispatch() {
     const selectedVehicleOption = vehicleSelect.options[vehicleSelect.selectedIndex];
     const cargoWeight = parseFloat(weightInput.value) || 0;
 
-    if (!selectedVehicleOption.value) {
+    if (!selectedVehicleOption || !selectedVehicleOption.value) {
         btnDispatch.disabled = true;
         errorAlert.classList.add('d-none');
         return;
@@ -72,15 +75,12 @@ function validateDispatch() {
     const maxCapacity = parseFloat(selectedVehicleOption.getAttribute('data-cap'));
 
     if (cargoWeight > maxCapacity) {
-        // Validation Failed: Show error and disable button
         maxCapDisplay.textContent = maxCapacity;
         overageDisplay.textContent = cargoWeight - maxCapacity;
         errorAlert.classList.remove('d-none');
         btnDispatch.disabled = true;
     } else {
-        // Validation Passed
         errorAlert.classList.add('d-none');
-        // Enable if driver, source, and dest are also loosely filled
         btnDispatch.disabled = false;
     }
 }
@@ -90,28 +90,30 @@ document.getElementById('createTripForm').addEventListener('submit', function (e
     e.preventDefault();
 
     const newTrip = {
-        id: "TR00" + (mockTrips.length + 5), // Mock ID generator
+        id: "TR00" + (mockTrips.length + 5), 
         source: document.getElementById('trip-source').value,
         dest: document.getElementById('trip-dest').value,
         vehicle: vehicleSelect.value,
         driver: driverSelect.value,
-        status: "Dispatched" // Rule: dispatching changes status to On Trip
+        status: "Dispatched"
     };
 
-    // Simulate changing Vehicle and Driver status to "On Trip" in the backend
     const vIndex = mockVehicles.findIndex(v => v.regNo === newTrip.vehicle);
     if (vIndex > -1) mockVehicles[vIndex].status = "On Trip";
 
     const dIndex = mockDrivers.findIndex(d => d.name === newTrip.driver);
     if (dIndex > -1) mockDrivers[dIndex].status = "On Trip";
 
-    mockTrips.unshift(newTrip); // Add to top of list
+    mockTrips.unshift(newTrip);
 
-    // Reset UI
     this.reset();
     validateDispatch();
-    populateDropdowns(); // Re-populate to remove newly dispatched assets
+    populateDropdowns();
     renderLiveBoard();
+
+    if (typeof showToast === 'function') {
+        showToast(`Trip ${newTrip.id} successfully dispatched!`, 'success');
+    }
 });
 
 // 7. Render the Live Board

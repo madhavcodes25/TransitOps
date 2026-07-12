@@ -76,21 +76,21 @@ function renderCharts() {
 // 3. CSV Export Functionality
 function setupExport() {
     document.getElementById('btn-export').addEventListener('click', () => {
-        // Generating mock CSV content
-        const csvContent = "data:text/csv;charset=utf-8,"
-            + "Metric,Value\n"
+        const csvContent = "Metric,Value\n"
             + "Fuel Efficiency,8.4 km/l\n"
             + "Fleet Utilization,81%\n"
             + "Operational Cost,34070\n"
-            + "Vehicle ROI,14.2%\n";
+            + "Vehicle ROI," + document.getElementById("kpi-roi").textContent + "\n";
 
-        // Create a hidden link, click it to download, then remove it
-        const encodedUri = encodeURI(csvContent);
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
+        link.setAttribute("href", url);
         link.setAttribute("download", "TransitOps_Analytics.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        showToast("Report exported successfully!", "success");
     });
 }

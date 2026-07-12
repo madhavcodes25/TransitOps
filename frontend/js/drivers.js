@@ -1,5 +1,5 @@
-// 1. Mock Data (Matches your POC)
-const mockDrivers = [
+// 1. Mock Data
+let mockDrivers = [
     { id: 1, name: "Alex", license: "DL-88213", category: "LMV", expiry: "12/2027", contact: "98765xxxxx", safety: "Available", status: "Available" },
     { id: 2, name: "John", license: "DL-44120", category: "HMV", expiry: "03/2025 EXPIRING", contact: "98220xxxxx", safety: "Suspended", status: "Suspended" },
     { id: 3, name: "Priya", license: "DL-77031", category: "LMV", expiry: "08/2028", contact: "97111xxxxx", safety: "On Trip", status: "On Trip" },
@@ -8,6 +8,9 @@ const mockDrivers = [
 
 document.addEventListener("DOMContentLoaded", () => {
     renderDrivers(mockDrivers);
+    
+    // Search Listener
+    document.getElementById('search-driver').addEventListener('keyup', filterDrivers);
 });
 
 // 2. Render Function
@@ -22,7 +25,7 @@ function renderDrivers(data) {
         if (driver.status === "Suspended") statusBadge = "bg-danger";
         if (driver.status === "Off Duty") statusBadge = "bg-secondary";
 
-        // Safety Badge Mapping (Simplifying to match mockup colors)
+        // Safety Badge Mapping
         let safetyBadge = driver.safety === "Suspended" ? "bg-danger" :
             driver.safety === "On Trip" ? "bg-primary" : "bg-success";
 
@@ -45,7 +48,17 @@ function renderDrivers(data) {
     });
 }
 
-// 3. Form Submission Handling
+// 3. Search Logic
+function filterDrivers() {
+    const searchVal = document.getElementById('search-driver').value.toLowerCase();
+    const filtered = mockDrivers.filter(d => 
+        d.name.toLowerCase().includes(searchVal) || 
+        d.license.toLowerCase().includes(searchVal)
+    );
+    renderDrivers(filtered);
+}
+
+// 4. Form Submission Handling
 document.getElementById('addDriverForm').addEventListener('submit', function (e) {
     e.preventDefault();
 
@@ -54,7 +67,6 @@ document.getElementById('addDriverForm').addEventListener('submit', function (e)
         name: document.getElementById('new-name').value,
         license: document.getElementById('new-license').value.toUpperCase(),
         category: document.getElementById('new-category').value,
-        // Basic date formatting for UI purposes
         expiry: document.getElementById('new-expiry').value,
         contact: document.getElementById('new-contact').value,
         safety: "Available",
@@ -67,4 +79,8 @@ document.getElementById('addDriverForm').addEventListener('submit', function (e)
     const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addDriverModal'));
     modalInstance.hide();
     this.reset();
+
+    if (typeof showToast === 'function') {
+        showToast(`Driver ${newDriver.name} added successfully!`, 'success');
+    }
 });
