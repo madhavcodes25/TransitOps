@@ -1,6 +1,7 @@
 package com.transitops.backend.service;
 
 import com.transitops.backend.entity.MaintenanceLog;
+import com.transitops.backend.exception.ResourceNotFoundException;
 import com.transitops.backend.repository.MaintenanceLogRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,10 @@ public class MaintenanceLogService {
         return repository.findAll();
     }
 
-    public Optional<MaintenanceLog> getLogById(Long id) {
-        return repository.findById(id);
+    public MaintenanceLog getLogById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Maintenance log not found with id " + id));
     }
 
     public MaintenanceLog saveLog(MaintenanceLog log) {

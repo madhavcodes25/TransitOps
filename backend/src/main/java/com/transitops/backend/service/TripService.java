@@ -1,6 +1,7 @@
 package com.transitops.backend.service;
 
 import com.transitops.backend.entity.Trip;
+import com.transitops.backend.exception.ResourceNotFoundException;
 import com.transitops.backend.repository.TripRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,10 @@ public class TripService {
         return tripRepository.findAll();
     }
 
-    public Optional<Trip> getTripById(Long id) {
-        return tripRepository.findById(id);
+    public Trip getTripById(Long id) {
+        return tripRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Trip not found with id " + id));
     }
 
     public Trip saveTrip(Trip trip) {

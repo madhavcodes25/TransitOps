@@ -1,6 +1,7 @@
 package com.transitops.backend.service;
 
 import com.transitops.backend.entity.FuelLog;
+import com.transitops.backend.exception.ResourceNotFoundException;
 import com.transitops.backend.repository.FuelLogRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,10 @@ public class FuelLogService {
         return repository.findAll();
     }
 
-    public Optional<FuelLog> getFuelLogById(Long id) {
-        return repository.findById(id);
+    public FuelLog getFuelLogById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Fuel log not found with id " + id));
     }
 
     public FuelLog saveFuelLog(FuelLog fuelLog) {

@@ -1,6 +1,7 @@
 package com.transitops.backend.service;
 
 import com.transitops.backend.entity.Driver;
+import com.transitops.backend.exception.ResourceNotFoundException;
 import com.transitops.backend.repository.DriverRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,10 @@ public class DriverService {
         return driverRepository.findAll();
     }
 
-    public Optional<Driver> getDriverById(Long id) {
-        return driverRepository.findById(id);
+    public Driver getDriverById(Long id) {
+        return driverRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Driver not found with id " + id));
     }
 
     public Driver saveDriver(Driver driver) {

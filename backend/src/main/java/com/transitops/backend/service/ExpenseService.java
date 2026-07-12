@@ -1,6 +1,7 @@
 package com.transitops.backend.service;
 
 import com.transitops.backend.entity.Expense;
+import com.transitops.backend.exception.ResourceNotFoundException;
 import com.transitops.backend.repository.ExpenseRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,10 @@ public class ExpenseService {
         return repository.findAll();
     }
 
-    public Optional<Expense> getExpenseById(Long id) {
-        return repository.findById(id);
+    public Expense getExpenseById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Expense not found with id " + id));
     }
 
     public Expense saveExpense(Expense expense) {

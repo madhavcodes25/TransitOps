@@ -5,7 +5,6 @@ import com.transitops.backend.service.ExpenseService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/expenses")
@@ -23,7 +22,7 @@ public class ExpenseController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Expense> getExpenseById(@PathVariable Long id) {
+    public Expense getExpenseById(@PathVariable Long id) {
         return service.getExpenseById(id);
     }
 

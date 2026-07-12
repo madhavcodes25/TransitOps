@@ -5,7 +5,6 @@ import com.transitops.backend.service.VehicleService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/vehicles")
@@ -23,7 +22,7 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Vehicle> getVehicleById(@PathVariable Long id) {
+    public Vehicle getVehicleById(@PathVariable Long id) {
         return vehicleService.getVehicleById(id);
     }
 
