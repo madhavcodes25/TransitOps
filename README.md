@@ -72,7 +72,7 @@ Or register your own account at `/pages/register.html`.
 ##  Project Structure
 
 ```
-## 📂 Project Structure
+##  Project Structure
 
 ```text
 TransitOps/
