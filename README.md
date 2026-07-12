@@ -136,8 +136,6 @@ TransitOps/
 ├── README.md
 └── .gitignore
 ```
-```
-
 ---
 
 ##  Authentication Flow
