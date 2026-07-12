@@ -1,32 +1,63 @@
-// 1. Mock Data
-let mockMaintenanceLogs = [
-    { id: 1, vehicle: "VAN-05", service: "Oil Change", date: "2026-07-07", cost: "2,500", status: "Active" },
-    { id: 2, vehicle: "TRUCK-11", service: "Engine Repair", date: "2026-06-15", cost: "18,000", status: "Completed" },
-    { id: 3, vehicle: "MINI-03", service: "Tyre Replace", date: "2026-07-10", cost: "6,200", status: "Active" }
-];
+let allVehicles = [];
+let allLogs = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-    renderMaintenanceLogs();
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadVehiclesForDropdown();
+    await loadLogs();
 });
 
-// 2. Render the Table
+async function loadVehiclesForDropdown() {
+    try {
+        const res = await fetch("/api/vehicles", { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+
+        allVehicles = await res.json();
+
+        const select = document.getElementById('maint-vehicle');
+        select.innerHTML = '<option value="">Select a vehicle...</option>';
+        allVehicles.forEach(v => {
+            select.insertAdjacentHTML('beforeend', `<option value="${v.id}">${v.registrationNumber}</option>`);
+        });
+
+    } catch (err) {
+        console.error("Failed to load vehicles:", err);
+    }
+}
+
+async function loadLogs() {
+    try {
+        const res = await fetch("/api/maintenance", { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+
+        allLogs = await res.json();
+        renderMaintenanceLogs();
+
+    } catch (err) {
+        console.error("Failed to load maintenance logs:", err);
+    }
+}
+
 function renderMaintenanceLogs() {
     const tbody = document.getElementById("maintenance-table-body");
     tbody.innerHTML = "";
 
-    mockMaintenanceLogs.forEach((log, index) => {
-        let badgeClass = log.status === "Active" ? "bg-warning text-dark" : "bg-success";
-        let actionButton = log.status === "Active"
-            ? `<button class="btn btn-sm btn-outline-success py-0" onclick="closeRecord(${index})">Mark Done</button>`
+    const sorted = [...allLogs].sort((a, b) => new Date(b.serviceDate) - new Date(a.serviceDate));
+
+    sorted.forEach(log => {
+        let badgeClass = log.status === "ACTIVE" ? "bg-warning text-dark" : "bg-success";
+        let actionButton = log.status === "ACTIVE"
+            ? `<button class="btn btn-sm btn-outline-success py-0" onclick="closeRecord(${log.id})">Mark Done</button>`
             : `<span class="text-muted small">Closed</span>`;
+
+        const vehicleLabel = log.vehicle ? log.vehicle.registrationNumber : "-";
 
         const row = `
             <tr>
-                <td class="fw-medium">${log.vehicle}</td>
-                <td>${log.service}</td>
-                <td>${log.date}</td>
+                <td class="fw-medium">${vehicleLabel}</td>
+                <td>${log.serviceType}</td>
+                <td>${log.serviceDate}</td>
                 <td>₹${log.cost}</td>
-                <td><span class="badge ${badgeClass} px-3 py-2">${log.status}</span></td>
+                <td><span class="badge ${badgeClass} px-3 py-2">${log.status.charAt(0) + log.status.slice(1).toLowerCase()}</span></td>
                 <td>${actionButton}</td>
             </tr>
         `;
@@ -34,47 +65,98 @@ function renderMaintenanceLogs() {
     });
 }
 
-// 3. Handle Form Submission (Create Record)
-document.getElementById('maintenanceForm').addEventListener('submit', function (e) {
+document.getElementById('maintenanceForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
-    const vehicle = document.getElementById('maint-vehicle').value;
-    const status = document.getElementById('maint-status').value;
+    const vehicleId = document.getElementById('maint-vehicle').value;
+    const statusVal = document.getElementById('maint-status').value; // "Active" or "Completed"
+    const status = statusVal === "Active" ? "ACTIVE" : "COMPLETED";
 
     const newLog = {
-        id: mockMaintenanceLogs.length + 1,
-        vehicle: vehicle,
-        service: document.getElementById('maint-type').value,
-        cost: document.getElementById('maint-cost').value,
-        date: document.getElementById('maint-date').value,
+        vehicle: { id: parseInt(vehicleId) },
+        serviceType: document.getElementById('maint-type').value,
+        cost: parseFloat(document.getElementById('maint-cost').value),
+        serviceDate: document.getElementById('maint-date').value,
         status: status
     };
 
-    mockMaintenanceLogs.unshift(newLog); // Add to top
+    try {
+        const res = await fetch("/api/maintenance", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...authHeaders()
+            },
+            body: JSON.stringify(newLog)
+        });
 
-    // Business Rule execution would normally happen via API here:
-    // If status === "Active", send API call to update Vehicle status to "In Shop"
-    // If status === "Completed", send API call to update Vehicle status to "Available"
-    console.log(`[API Trigger] Vehicle ${vehicle} status updated to: ${status === "Active" ? "In Shop" : "Available"}`);
+        if (res.status === 401) { logout(); return; }
 
-    renderMaintenanceLogs();
-    this.reset();
-    document.getElementById('maint-date').valueAsDate = new Date(); // Reset date
+        if (!res.ok) {
+            if (typeof showToast === 'function') {
+                showToast("Failed to save service record. Check the form and try again.", 'danger');
+            }
+            return;
+        }
 
-    showToast(`Service record logged for ${vehicle}.`, 'success');
+        await loadLogs();
+
+        this.reset();
+        document.getElementById('maint-date').valueAsDate = new Date();
+
+        if (typeof showToast === 'function') {
+            showToast(`Service record logged.`, 'success');
+        }
+
+    } catch (err) {
+        console.error("Failed to create maintenance log:", err);
+        if (typeof showToast === 'function') {
+            showToast("Network error - couldn't reach the server.", 'danger');
+        }
+    }
 });
 
-// 4. Handle Closing a Record
-window.closeRecord = function (index) {
-    // 1. Update log status
-    mockMaintenanceLogs[index].status = "Completed";
+// Mark a record as completed via PUT /api/maintenance/{id}
+window.closeRecord = async function (id) {
+    const log = allLogs.find(l => l.id === id);
+    if (!log) return;
 
-    // 2. Trigger business logic
-    const vehicle = mockMaintenanceLogs[index].vehicle;
-    
-    // 3. Provide user feedback
-    showToast(`Service for ${vehicle} completed.`, 'success');
+    const updatedLog = {
+        vehicle: { id: log.vehicle.id },
+        serviceType: log.serviceType,
+        cost: log.cost,
+        serviceDate: log.serviceDate,
+        completionDate: new Date().toISOString().split('T')[0],
+        status: "COMPLETED",
+        remarks: log.remarks || null
+    };
 
-    // 4. Re-render
-    renderMaintenanceLogs();
+    try {
+        const res = await fetch(`/api/maintenance/${id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                ...authHeaders()
+            },
+            body: JSON.stringify(updatedLog)
+        });
+
+        if (res.status === 401) { logout(); return; }
+
+        if (!res.ok) {
+            if (typeof showToast === 'function') {
+                showToast("Failed to update record.", 'danger');
+            }
+            return;
+        }
+
+        await loadLogs();
+
+        if (typeof showToast === 'function') {
+            showToast(`Service marked complete.`, 'success');
+        }
+
+    } catch (err) {
+        console.error("Failed to update maintenance log:", err);
+    }
 };

@@ -1,46 +1,57 @@
-// 1. Mock Data
-let mockDrivers = [
-    { id: 1, name: "Alex", license: "DL-88213", category: "LMV", expiry: "12/2027", contact: "98765xxxxx", safety: "Available", status: "Available" },
-    { id: 2, name: "John", license: "DL-44120", category: "HMV", expiry: "03/2025 EXPIRING", contact: "98220xxxxx", safety: "Suspended", status: "Suspended" },
-    { id: 3, name: "Priya", license: "DL-77031", category: "LMV", expiry: "08/2028", contact: "97111xxxxx", safety: "On Trip", status: "On Trip" },
-    { id: 4, name: "Suresh", license: "DL-90045", category: "HMV", expiry: "01/2027", contact: "97440xxxxx", safety: "Available", status: "Off Duty" }
-];
+let allDrivers = [];
 
-document.addEventListener("DOMContentLoaded", () => {
-    renderDrivers(mockDrivers);
-    
-    // Search Listener
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadDrivers();
     document.getElementById('search-driver').addEventListener('keyup', filterDrivers);
 });
 
-// 2. Render Function
+async function loadDrivers() {
+    try {
+        const res = await fetch("/api/drivers", { headers: authHeaders() });
+
+        if (res.status === 401) {
+            logout();
+            return;
+        }
+
+        allDrivers = await res.json();
+        renderDrivers(allDrivers);
+
+    } catch (err) {
+        console.error("Failed to load drivers:", err);
+    }
+}
+
 function renderDrivers(data) {
     const tbody = document.getElementById("driver-table-body");
     tbody.innerHTML = "";
 
     data.forEach(driver => {
-        // Status Badge Mapping
         let statusBadge = "bg-success";
-        if (driver.status === "On Trip") statusBadge = "bg-primary";
-        if (driver.status === "Suspended") statusBadge = "bg-danger";
-        if (driver.status === "Off Duty") statusBadge = "bg-secondary";
+        if (driver.status === "ON_TRIP") statusBadge = "bg-primary";
+        if (driver.status === "SUSPENDED") statusBadge = "bg-danger";
+        if (driver.status === "OFF_DUTY") statusBadge = "bg-secondary";
 
-        // Safety Badge Mapping
-        let safetyBadge = driver.safety === "Suspended" ? "bg-danger" :
-            driver.safety === "On Trip" ? "bg-primary" : "bg-success";
+        const statusLabel = driver.status.charAt(0) + driver.status.slice(1).toLowerCase().replace("_", " ");
 
-        // Highlight expiring licenses
-        let expiryText = driver.expiry.includes("EXPIRING") ? `<span class="text-danger fw-bold">${driver.expiry}</span>` : driver.expiry;
+        // Flag licenses expiring within 60 days
+        const expiryDate = new Date(driver.licenseExpiryDate);
+        const isExpiringSoon = (expiryDate - new Date()) / (1000 * 60 * 60 * 24) < 60;
+        const expiryText = isExpiringSoon
+            ? `<span class="text-danger fw-bold">${driver.licenseExpiryDate}</span>`
+            : driver.licenseExpiryDate;
+
+        let safetyBadge = driver.safetyScore >= 80 ? "bg-success" : driver.safetyScore >= 50 ? "bg-warning text-dark" : "bg-danger";
 
         const row = `
             <tr>
                 <td class="fw-medium">${driver.name}</td>
-                <td class="text-uppercase">${driver.license}</td>
-                <td>${driver.category}</td>
+                <td class="text-uppercase">${driver.licenseNumber}</td>
+                <td>${driver.licenseCategory}</td>
                 <td>${expiryText}</td>
-                <td>${driver.contact}</td>
-                <td><span class="badge ${safetyBadge} w-100 py-2">${driver.safety}</span></td>
-                <td><span class="badge ${statusBadge} w-100 py-2">${driver.status}</span></td>
+                <td>${driver.contactNumber}</td>
+                <td><span class="badge ${safetyBadge} w-100 py-2">${driver.safetyScore}</span></td>
+                <td><span class="badge ${statusBadge} w-100 py-2">${statusLabel}</span></td>
             </tr>
         `;
 
@@ -48,39 +59,65 @@ function renderDrivers(data) {
     });
 }
 
-// 3. Search Logic
 function filterDrivers() {
     const searchVal = document.getElementById('search-driver').value.toLowerCase();
-    const filtered = mockDrivers.filter(d => 
-        d.name.toLowerCase().includes(searchVal) || 
-        d.license.toLowerCase().includes(searchVal)
+    const filtered = allDrivers.filter(d =>
+        d.name.toLowerCase().includes(searchVal) ||
+        d.licenseNumber.toLowerCase().includes(searchVal)
     );
     renderDrivers(filtered);
 }
 
-// 4. Form Submission Handling
-document.getElementById('addDriverForm').addEventListener('submit', function (e) {
+document.getElementById('addDriverForm').addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const newDriver = {
-        id: mockDrivers.length + 1,
         name: document.getElementById('new-name').value,
-        license: document.getElementById('new-license').value.toUpperCase(),
-        category: document.getElementById('new-category').value,
-        expiry: document.getElementById('new-expiry').value,
-        contact: document.getElementById('new-contact').value,
-        safety: "Available",
-        status: "Available"
+        licenseNumber: document.getElementById('new-license').value.toUpperCase(),
+        licenseCategory: document.getElementById('new-category').value,
+        licenseExpiryDate: document.getElementById('new-expiry').value,
+        contactNumber: document.getElementById('new-contact').value,
+        email: document.getElementById('new-email').value,
+        safetyScore: 100,
+        status: "AVAILABLE"
     };
 
-    mockDrivers.push(newDriver);
-    renderDrivers(mockDrivers);
+    try {
+        const res = await fetch("/api/drivers", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...authHeaders()
+            },
+            body: JSON.stringify(newDriver)
+        });
 
-    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addDriverModal'));
-    modalInstance.hide();
-    this.reset();
+        if (res.status === 401) {
+            logout();
+            return;
+        }
 
-    if (typeof showToast === 'function') {
-        showToast(`Driver ${newDriver.name} added successfully!`, 'success');
+        if (!res.ok) {
+            if (typeof showToast === 'function') {
+                showToast("Failed to save driver. Check the form and try again.", 'danger');
+            }
+            return;
+        }
+
+        await loadDrivers();
+
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addDriverModal'));
+        modalInstance.hide();
+        this.reset();
+
+        if (typeof showToast === 'function') {
+            showToast(`Driver ${newDriver.name} added successfully!`, 'success');
+        }
+
+    } catch (err) {
+        console.error("Failed to create driver:", err);
+        if (typeof showToast === 'function') {
+            showToast("Network error - couldn't reach the server.", 'danger');
+        }
     }
 });

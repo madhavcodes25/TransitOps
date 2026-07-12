@@ -1,112 +1,150 @@
-// 1. Mock Master Data
-let mockVehicles = [
-    { regNo: "GJ01AB452", model: "VAN-05", type: "Van", capacity: "500 kg", odometer: "74,000", cost: "6,20,000", status: "Available" },
-    { regNo: "GJ01AB998", model: "TRUCK-11", type: "Truck", capacity: "5 Ton", odometer: "182,000", cost: "24,50,000", status: "On Trip" },
-    { regNo: "GJ01AB1120", model: "MINI-03", type: "Mini", capacity: "1 Ton", odometer: "66,000", cost: "4,10,000", status: "In Shop" },
-    { regNo: "GJ01AB008", model: "VAN-09", type: "Van", capacity: "750 kg", odometer: "241,900", cost: "-", status: "Retired" }
-];
+// Holds the current full dataset fetched from the backend
+let allVehicles = [];
 
-// 2. Initialization
-document.addEventListener("DOMContentLoaded", () => {
-    renderVehicles(mockVehicles);
+// 1. Initialization
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadVehicles();
 
-    // Add Event Listeners for Filters
     document.getElementById('search-reg').addEventListener('keyup', filterVehicles);
     document.getElementById('filter-type').addEventListener('change', filterVehicles);
     document.getElementById('filter-status').addEventListener('change', filterVehicles);
 });
 
+// 2. Fetch real vehicles from the backend
+async function loadVehicles() {
+    try {
+        const res = await fetch("/api/vehicles", { headers: authHeaders() });
+
+        if (res.status === 401) {
+            logout();
+            return;
+        }
+
+        allVehicles = await res.json();
+        renderVehicles(allVehicles);
+
+    } catch (err) {
+        console.error("Failed to load vehicles:", err);
+    }
+}
+
 // 3. Render Function
 function renderVehicles(data) {
     const tbody = document.getElementById("vehicle-table-body");
-    tbody.innerHTML = ""; // Clear existing rows
+    tbody.innerHTML = "";
 
     data.forEach(vehicle => {
-        // Assign the correct Bootstrap badge color based on status
         let badgeClass = "";
         switch (vehicle.status) {
-            case "Available": badgeClass = "bg-success"; break;
-            case "On Trip": badgeClass = "bg-primary"; break;
-            case "In Shop": badgeClass = "bg-warning text-dark"; break;
-            case "Retired": badgeClass = "bg-danger"; break;
+            case "AVAILABLE": badgeClass = "bg-success"; break;
+            case "ON_TRIP": badgeClass = "bg-primary"; break;
+            case "IN_SHOP": badgeClass = "bg-warning text-dark"; break;
+            case "RETIRED": badgeClass = "bg-danger"; break;
         }
 
-        // Build the HTML string
+        const statusLabel = vehicle.status.charAt(0) + vehicle.status.slice(1).toLowerCase().replace("_", " ");
+
         const row = `
             <tr>
-                <td class="fw-medium">${vehicle.regNo}</td>
-                <td>${vehicle.model}</td>
-                <td>${vehicle.type}</td>
-                <td>${vehicle.capacity}</td>
+                <td class="fw-medium">${vehicle.registrationNumber}</td>
+                <td>${vehicle.vehicleName}</td>
+                <td>${vehicle.vehicleType}</td>
+                <td>${vehicle.maxLoadCapacity}</td>
                 <td>${vehicle.odometer}</td>
-                <td>${vehicle.cost}</td>
-                <td><span class="badge ${badgeClass} w-100 py-2">${vehicle.status}</span></td>
+                <td>${vehicle.acquisitionCost}</td>
+                <td><span class="badge ${badgeClass} w-100 py-2">${statusLabel}</span></td>
             </tr>
         `;
 
-        // Inject into the DOM
         tbody.insertAdjacentHTML('beforeend', row);
     });
 }
 
-// 4. Handle Form Submission & Validation
-document.getElementById('addVehicleForm').addEventListener('submit', function (e) {
-    e.preventDefault(); // Prevent page reload
+// 4. Handle Form Submission - creates a real vehicle via POST /api/vehicles
+document.getElementById('addVehicleForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
 
     const regInput = document.getElementById('new-reg').value.toUpperCase().trim();
     const errorAlert = document.getElementById('reg-error');
 
-    // Business Rule: Validate Unique Registration Number
-    const exists = mockVehicles.some(v => v.regNo.toUpperCase() === regInput);
+    // Client-side duplicate check against currently loaded data (backend also enforces uniqueness)
+    const exists = allVehicles.some(v => v.registrationNumber.toUpperCase() === regInput);
 
     if (exists) {
-        // Show error and stop submission
         errorAlert.classList.remove('d-none');
         return;
     }
 
-    // Hide error if previously shown
     errorAlert.classList.add('d-none');
 
-    // Create the new vehicle object
     const newVehicle = {
-        regNo: regInput,
-        model: document.getElementById('new-model').value.toUpperCase(),
-        type: document.getElementById('new-type').value,
-        capacity: document.getElementById('new-capacity').value,
-        odometer: document.getElementById('new-odo').value || "0",
-        cost: document.getElementById('new-cost').value || "-",
-        status: "Available" // New vehicles are available by default
+        registrationNumber: regInput,
+        vehicleName: document.getElementById('new-model').value.toUpperCase(),
+        vehicleType: document.getElementById('new-type').value.toUpperCase(),
+        region: "N/A",
+        maxLoadCapacity: parseFloat(document.getElementById('new-capacity').value) || 0,
+        odometer: parseFloat(document.getElementById('new-odo').value) || 0,
+        acquisitionCost: parseFloat(document.getElementById('new-cost').value) || 0,
+        status: "AVAILABLE"
     };
 
-    // Add to our mock array
-    mockVehicles.push(newVehicle);
+    try {
+        const res = await fetch("/api/vehicles", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...authHeaders()
+            },
+            body: JSON.stringify(newVehicle)
+        });
 
-    // Re-render the table with the new data
-    renderVehicles(mockVehicles);
+        if (res.status === 401) {
+            logout();
+            return;
+        }
 
-    // Close the modal and reset the form
-    const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addVehicleModal'));
-    modalInstance.hide();
-    this.reset();
+        if (!res.ok) {
+            errorAlert.textContent = "Failed to save vehicle. Check the form values and try again.";
+            errorAlert.classList.remove('d-none');
+            return;
+        }
 
-    // Trigger Toast Notification (Assuming showToast is defined in your main JS/auth.js)
-    if (typeof showToast === 'function') {
-        showToast(`Vehicle ${regInput} added to fleet!`, 'success');
+        // Refresh the table with the latest data from the backend
+        await loadVehicles();
+
+        const modalInstance = bootstrap.Modal.getInstance(document.getElementById('addVehicleModal'));
+        modalInstance.hide();
+        this.reset();
+
+        if (typeof showToast === 'function') {
+            showToast(`Vehicle ${regInput} added to fleet!`, 'success');
+        }
+
+    } catch (err) {
+        console.error("Failed to create vehicle:", err);
+        errorAlert.textContent = "Network error - couldn't reach the server.";
+        errorAlert.classList.remove('d-none');
     }
 });
 
-// 5. Filter Logic
+// 5. Filter Logic - filters the already-loaded dataset client-side
 function filterVehicles() {
     const searchVal = document.getElementById('search-reg').value.toLowerCase();
     const typeVal = document.getElementById('filter-type').value;
     const statusVal = document.getElementById('filter-status').value;
 
-    const filtered = mockVehicles.filter(v => {
-        const matchesSearch = v.regNo.toLowerCase().includes(searchVal) || 
-                              v.model.toLowerCase().includes(searchVal);
-        const matchesType = (typeVal === "All" || v.type === typeVal);
-        const matchesStatus = (statusVal === "All" || v.status === statusVal);
+    const statusMap = {
+        "Available": "AVAILABLE",
+        "On Trip": "ON_TRIP",
+        "In Shop": "IN_SHOP",
+        "Retired": "RETIRED"
+    };
+
+    const filtered = allVehicles.filter(v => {
+        const matchesSearch = v.registrationNumber.toLowerCase().includes(searchVal) ||
+            v.vehicleName.toLowerCase().includes(searchVal);
+        const matchesType = (typeVal === "All" || v.vehicleType.toUpperCase() === typeVal.toUpperCase());
+        const matchesStatus = (statusVal === "All" || v.status === statusMap[statusVal]);
 
         return matchesSearch && matchesType && matchesStatus;
     });

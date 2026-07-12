@@ -1,42 +1,98 @@
-// 1. Mock Data
-let mockFuelLogs = [
-    { id: 1, vehicle: "VAN-05", date: "05 Jul 2026", liters: 42, cost: 3150 },
-    { id: 2, vehicle: "TRUCK-11", date: "06 Jul 2026", liters: 110, cost: 8400 },
-    { id: 3, vehicle: "MINI-03", date: "06 Jul 2026", liters: 28, cost: 2050 }
-];
+let allVehicles = [];
+let allTrips = [];
+let allFuelLogs = [];
+let allExpenses = [];
 
-let mockExpenses = [
-    { id: 1, trip: "TR001", vehicle: "VAN-05", toll: 120, other: 0, maintLinked: 0 },
-    { id: 2, trip: "TR002", vehicle: "TRK-12", toll: 340, other: 150, maintLinked: 18000 }
-];
+document.addEventListener("DOMContentLoaded", async () => {
+    await loadDropdownData();
+    await loadFuelLogs();
+    await loadExpenses();
 
-// Helper: Format date for UI consistency
-function formatDate(dateString) {
-    const options = { day: '2-digit', month: 'short', year: 'numeric' };
-    return new Date(dateString).toLocaleDateString('en-GB', options).replace(',', '');
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-    renderFuelTable(mockFuelLogs);
-    renderExpenseTable(mockExpenses);
-    calculateTotalCost();
-
-    // Event Listeners for Search and Filter
     document.getElementById('search-fuel').addEventListener('keyup', filterFuelData);
     document.getElementById('filter-fuel-vehicle').addEventListener('change', filterFuelData);
 });
 
-// 2. Render Functions
+async function loadDropdownData() {
+    try {
+        const [vRes, tRes] = await Promise.all([
+            fetch("/api/vehicles", { headers: authHeaders() }),
+            fetch("/api/trips", { headers: authHeaders() })
+        ]);
+
+        if (vRes.status === 401 || tRes.status === 401) { logout(); return; }
+
+        allVehicles = await vRes.json();
+        allTrips = await tRes.json();
+
+        populateVehicleDropdowns();
+        populateTripDropdown();
+
+    } catch (err) {
+        console.error("Failed to load dropdown data:", err);
+    }
+}
+
+function populateVehicleDropdowns() {
+    ['fuel-vehicle', 'exp-vehicle', 'filter-fuel-vehicle'].forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+
+        const keepFirst = id === 'filter-fuel-vehicle';
+        select.innerHTML = keepFirst ? '<option value="All">All Vehicles</option>' : '';
+
+        allVehicles.forEach(v => {
+            select.insertAdjacentHTML('beforeend', `<option value="${v.id}">${v.registrationNumber}</option>`);
+        });
+    });
+}
+
+function populateTripDropdown() {
+    const select = document.getElementById('exp-trip');
+    select.innerHTML = '';
+    allTrips.forEach(t => {
+        select.insertAdjacentHTML('beforeend', `<option value="${t.id}">${t.tripNumber}</option>`);
+    });
+}
+
+async function loadFuelLogs() {
+    try {
+        const res = await fetch("/api/fuel", { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+
+        allFuelLogs = await res.json();
+        renderFuelTable(allFuelLogs);
+        calculateTotalCost();
+
+    } catch (err) {
+        console.error("Failed to load fuel logs:", err);
+    }
+}
+
+async function loadExpenses() {
+    try {
+        const res = await fetch("/api/expenses", { headers: authHeaders() });
+        if (res.status === 401) { logout(); return; }
+
+        allExpenses = await res.json();
+        renderExpenseTable(allExpenses);
+        calculateTotalCost();
+
+    } catch (err) {
+        console.error("Failed to load expenses:", err);
+    }
+}
+
 function renderFuelTable(data) {
     const tbody = document.getElementById("fuel-table-body");
     tbody.innerHTML = "";
     data.forEach(log => {
+        const vehicleLabel = log.vehicle ? log.vehicle.registrationNumber : "-";
         const row = `
             <tr>
-                <td class="fw-medium">${log.vehicle}</td>
-                <td>${log.date}</td>
+                <td class="fw-medium">${vehicleLabel}</td>
+                <td>${log.fuelDate}</td>
                 <td>${log.liters} L</td>
-                <td>₹${log.cost.toLocaleString()}</td>
+                <td>₹${log.fuelCost.toLocaleString()}</td>
             </tr>
         `;
         tbody.insertAdjacentHTML('beforeend', row);
@@ -47,73 +103,123 @@ function renderExpenseTable(data) {
     const tbody = document.getElementById("expense-table-body");
     tbody.innerHTML = "";
     data.forEach(exp => {
+        const tripLabel = exp.trip ? exp.trip.tripNumber : "-";
+        const vehicleLabel = exp.trip && exp.trip.vehicle ? exp.trip.vehicle.registrationNumber : "-";
         const row = `
             <tr>
-                <td class="fw-medium">${exp.trip}</td>
-                <td>${exp.vehicle}</td>
-                <td>₹${exp.toll.toLocaleString()}</td>
-                <td>₹${exp.other.toLocaleString()}</td>
-                <td>₹${exp.maintLinked.toLocaleString()}</td>
+                <td class="fw-medium">${tripLabel}</td>
+                <td>${vehicleLabel}</td>
+                <td>${exp.expenseType === "TOLL" ? "₹" + exp.amount.toLocaleString() : "-"}</td>
+                <td>${exp.expenseType !== "TOLL" ? "₹" + exp.amount.toLocaleString() + " (" + exp.expenseType + ")" : "-"}</td>
+                <td>-</td>
             </tr>
         `;
         tbody.insertAdjacentHTML('beforeend', row);
     });
 }
 
-// 3. Calculation Engine
 function calculateTotalCost() {
-    let totalFuel = mockFuelLogs.reduce((sum, log) => sum + parseFloat(log.cost), 0);
-    let totalExpenses = mockExpenses.reduce((sum, exp) => sum + parseFloat(exp.toll) + parseFloat(exp.other) + parseFloat(exp.maintLinked), 0);
+    let totalFuel = allFuelLogs.reduce((sum, log) => sum + log.fuelCost, 0);
+    let totalExpenses = allExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     document.getElementById("total-cost-display").textContent = (totalFuel + totalExpenses).toLocaleString();
 }
 
-// 4. Filter Logic
 function filterFuelData() {
     const searchVal = document.getElementById('search-fuel').value.toLowerCase();
     const vehicleVal = document.getElementById('filter-fuel-vehicle').value;
 
-    const filtered = mockFuelLogs.filter(log => {
-        const matchesSearch = log.vehicle.toLowerCase().includes(searchVal);
-        const matchesVehicle = (vehicleVal === "All" || log.vehicle === vehicleVal);
+    const filtered = allFuelLogs.filter(log => {
+        const regNo = log.vehicle ? log.vehicle.registrationNumber : "";
+        const matchesSearch = regNo.toLowerCase().includes(searchVal);
+        const matchesVehicle = (vehicleVal === "All" || String(log.vehicle?.id) === vehicleVal);
         return matchesSearch && matchesVehicle;
     });
 
     renderFuelTable(filtered);
 }
 
-// 5. Form Handlers
-document.getElementById('fuelForm').addEventListener('submit', function (e) {
+document.getElementById('fuelForm').addEventListener('submit', async function (e) {
     e.preventDefault();
+
     const newLog = {
-        id: mockFuelLogs.length + 1,
-        vehicle: document.getElementById('fuel-vehicle').value,
-        date: formatDate(document.getElementById('fuel-date').value),
+        vehicle: { id: parseInt(document.getElementById('fuel-vehicle').value) },
         liters: parseFloat(document.getElementById('fuel-liters').value),
-        cost: parseFloat(document.getElementById('fuel-cost').value)
+        fuelCost: parseFloat(document.getElementById('fuel-cost').value),
+        fuelDate: document.getElementById('fuel-date').value,
+        odometerReading: parseFloat(document.getElementById('fuel-odometer').value)
     };
-    mockFuelLogs.push(newLog);
-    renderFuelTable(mockFuelLogs);
-    calculateTotalCost();
-    bootstrap.Modal.getInstance(document.getElementById('logFuelModal')).hide();
-    this.reset();
-    document.getElementById('fuel-date').valueAsDate = new Date();
-    showToast(`Fuel log added for ${newLog.vehicle}!`, 'success');
+
+    try {
+        const res = await fetch("/api/fuel", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify(newLog)
+        });
+
+        if (res.status === 401) { logout(); return; }
+
+        if (!res.ok) {
+            if (typeof showToast === 'function') showToast("Failed to save fuel log.", 'danger');
+            return;
+        }
+
+        await loadFuelLogs();
+
+        bootstrap.Modal.getInstance(document.getElementById('logFuelModal')).hide();
+        this.reset();
+        document.getElementById('fuel-date').valueAsDate = new Date();
+
+        if (typeof showToast === 'function') showToast(`Fuel log added!`, 'success');
+
+    } catch (err) {
+        console.error("Failed to create fuel log:", err);
+        if (typeof showToast === 'function') showToast("Network error.", 'danger');
+    }
 });
 
-document.getElementById('expenseForm').addEventListener('submit', function (e) {
+document.getElementById('expenseForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    const newExp = {
-        id: mockExpenses.length + 1,
-        trip: document.getElementById('exp-trip').value.toUpperCase(),
-        vehicle: document.getElementById('exp-vehicle').value,
-        toll: parseFloat(document.getElementById('exp-toll').value) || 0,
-        other: parseFloat(document.getElementById('exp-other').value) || 0,
-        maintLinked: 0 
-    };
-    mockExpenses.push(newExp);
-    renderExpenseTable(mockExpenses);
-    calculateTotalCost();
-    bootstrap.Modal.getInstance(document.getElementById('addExpenseModal')).hide();
-    this.reset();
-    showToast(`Expense for ${newExp.trip} saved successfully!`, 'success');
+
+    const tripId = parseInt(document.getElementById('exp-trip').value);
+    const toll = parseFloat(document.getElementById('exp-toll').value) || 0;
+    const other = parseFloat(document.getElementById('exp-other').value) || 0;
+
+    const requests = [];
+
+    if (toll > 0) {
+        requests.push(fetch("/api/expenses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify({ trip: { id: tripId }, expenseType: "TOLL", amount: toll })
+        }));
+    }
+
+    if (other > 0) {
+        requests.push(fetch("/api/expenses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify({ trip: { id: tripId }, expenseType: "OTHER", amount: other })
+        }));
+    }
+
+    try {
+        const results = await Promise.all(requests);
+
+        if (results.some(r => r.status === 401)) { logout(); return; }
+        if (results.some(r => !r.ok)) {
+            if (typeof showToast === 'function') showToast("Failed to save one or more expenses.", 'danger');
+            return;
+        }
+
+        await loadExpenses();
+
+        bootstrap.Modal.getInstance(document.getElementById('addExpenseModal')).hide();
+        this.reset();
+
+        if (typeof showToast === 'function') showToast(`Expense saved successfully!`, 'success');
+
+    } catch (err) {
+        console.error("Failed to create expense:", err);
+        if (typeof showToast === 'function') showToast("Network error.", 'danger');
+    }
 });

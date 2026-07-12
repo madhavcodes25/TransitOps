@@ -1,26 +1,44 @@
-// Mock Data
-const mockVehicles = [
-    { id: 1, regNo: "VAN-05", status: "Available", type: "Van" },
-    { id: 2, regNo: "TRK-11", status: "In Shop", type: "Truck" },
-    { id: 3, regNo: "MINI-08", status: "On Trip", type: "Mini" },
-    { id: 4, regNo: "VAN-09", status: "Available", type: "Van" },
-    { id: 5, regNo: "TRK-12", status: "Available", type: "Truck" }
-];
+document.addEventListener("DOMContentLoaded", async () => {
 
-const mockTrips = [
-    { id: "TR001", vehicle: "VAN-05", driver: "Alex", status: "On Trip", eta: "45 min" },
-    { id: "TR002", vehicle: "TRK-12", driver: "John", status: "Completed", eta: "-" },
-    { id: "TR003", vehicle: "MINI-08", driver: "Priya", status: "Dispatched", eta: "1h 10m" },
-    { id: "TR004", vehicle: "-", driver: "-", status: "Draft", eta: "Awaiting vehicle" }
-];
+    const token = localStorage.getItem("token");
 
-document.addEventListener("DOMContentLoaded", () => {
-    updateDashboard(mockVehicles, mockTrips);
-    populateFilters();
+    if (!token) {
+        window.location.href = "login.html";
+        return;
+    }
 
-    // Add Event Listeners for filters
-    document.getElementById('filter-type').addEventListener('change', applyFilters);
-    document.getElementById('filter-status').addEventListener('change', applyFilters);
+    const authHeaders = {
+        "Authorization": "Bearer " + token
+    };
+
+    let vehicles = [];
+    let trips = [];
+
+    try {
+        const [vehiclesRes, tripsRes] = await Promise.all([
+            fetch("/api/vehicles", { headers: authHeaders }),
+            fetch("/api/trips", { headers: authHeaders })
+        ]);
+
+        if (vehiclesRes.status === 401 || tripsRes.status === 401) {
+            localStorage.removeItem("token");
+            window.location.href = "login.html";
+            return;
+        }
+
+        vehicles = await vehiclesRes.json();
+        trips = await tripsRes.json();
+
+    } catch (err) {
+        console.error("Failed to load dashboard data:", err);
+        return;
+    }
+
+    updateDashboard(vehicles, trips);
+    populateFilters(vehicles);
+
+    document.getElementById('filter-type').addEventListener('change', () => applyFilters(vehicles, trips));
+    document.getElementById('filter-status').addEventListener('change', () => applyFilters(vehicles, trips));
 });
 
 // Update everything based on provided datasets
@@ -31,9 +49,9 @@ function updateDashboard(vehicles, trips) {
 
 function calculateKPIs(vehicles, trips) {
     const totalVehicles = vehicles.length;
-    const availableCount = vehicles.filter(v => v.status === "Available").length;
-    const maintenanceCount = vehicles.filter(v => v.status === "In Shop").length;
-    const activeTripsCount = trips.filter(t => t.status === "On Trip" || t.status === "Dispatched").length;
+    const availableCount = vehicles.filter(v => v.status === "AVAILABLE").length;
+    const maintenanceCount = vehicles.filter(v => v.status === "IN_SHOP").length;
+    const activeTripsCount = trips.filter(t => t.status === "DISPATCHED").length;
 
     const utilization = totalVehicles > 0 ? Math.round((activeTripsCount / totalVehicles) * 100) : 0;
 
@@ -47,43 +65,51 @@ function calculateKPIs(vehicles, trips) {
 function renderRecentTrips(trips) {
     const tableBody = document.getElementById("recent-trips-body");
     tableBody.innerHTML = "";
-    trips.forEach(trip => {
+
+    const sorted = [...trips].sort((a, b) => new Date(b.dispatchDate) - new Date(a.dispatchDate));
+
+    sorted.forEach(trip => {
         let badgeClass = "bg-secondary";
-        if (trip.status === "On Trip" || trip.status === "Dispatched") badgeClass = "bg-info text-dark";
-        if (trip.status === "Completed") badgeClass = "bg-success";
+        if (trip.status === "DISPATCHED") badgeClass = "bg-info text-dark";
+        if (trip.status === "COMPLETED") badgeClass = "bg-success";
+        if (trip.status === "CANCELLED") badgeClass = "bg-danger";
+
+        const vehicleLabel = trip.vehicle ? trip.vehicle.registrationNumber : "-";
+        const driverLabel = trip.driver ? trip.driver.name : "-";
+        const statusLabel = trip.status.charAt(0) + trip.status.slice(1).toLowerCase();
 
         tableBody.insertAdjacentHTML('beforeend', `
             <tr>
-                <td>${trip.id}</td>
-                <td>${trip.vehicle}</td>
-                <td>${trip.driver}</td>
-                <td><span class="badge ${badgeClass}">${trip.status}</span></td>
+                <td>${trip.tripNumber}</td>
+                <td>${vehicleLabel}</td>
+                <td>${driverLabel}</td>
+                <td><span class="badge ${badgeClass}">${statusLabel}</span></td>
             </tr>
         `);
     });
 }
 
-function populateFilters() {
+function populateFilters(vehicles) {
     const typeSelect = document.getElementById('filter-type');
     const statusSelect = document.getElementById('filter-status');
 
-    const types = [...new Set(mockVehicles.map(v => v.type))];
-    const statuses = [...new Set(mockVehicles.map(v => v.status))];
+    const types = [...new Set(vehicles.map(v => v.vehicleType))];
+    const statuses = [...new Set(vehicles.map(v => v.status))];
 
     types.forEach(t => typeSelect.insertAdjacentHTML('beforeend', `<option value="${t}">${t}</option>`));
     statuses.forEach(s => statusSelect.insertAdjacentHTML('beforeend', `<option value="${s}">${s}</option>`));
 }
 
 // Logic to actually filter the data
-function applyFilters() {
+function applyFilters(vehicles, trips) {
     const selectedType = document.getElementById('filter-type').value;
     const selectedStatus = document.getElementById('filter-status').value;
 
-    const filteredVehicles = mockVehicles.filter(v => {
-        const matchType = selectedType === "" || selectedType === "Vehicle Type: All" || v.type === selectedType;
-        const matchStatus = selectedStatus === "" || selectedStatus === "Status: All" || v.status === selectedStatus;
+    const filteredVehicles = vehicles.filter(v => {
+        const matchType = selectedType === "" || selectedType.includes("All") || v.vehicleType === selectedType;
+        const matchStatus = selectedStatus === "" || selectedStatus.includes("All") || v.status === selectedStatus;
         return matchType && matchStatus;
     });
 
-    updateDashboard(filteredVehicles, mockTrips);
+    updateDashboard(filteredVehicles, trips);
 }

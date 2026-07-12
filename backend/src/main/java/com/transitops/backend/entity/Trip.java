@@ -1,62 +1,62 @@
-package com.transitops.backend.entity;
+    package com.transitops.backend.entity;
 
-import com.transitops.backend.enums.TripStatus;
-import jakarta.persistence.*;
-import lombok.*;
+    import com.transitops.backend.enums.TripStatus;
+    import jakarta.persistence.*;
+    import lombok.*;
 
-import java.time.LocalDate;
+    import java.time.LocalDate;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
-@Table(name = "trips")
-public class Trip {
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Entity
+    @Table(name = "trips")
+    public class Trip {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String tripNumber;
+        @Column(nullable = false, unique = true)
+        private String tripNumber;
 
-    @Column(nullable = false)
-    private String source;
+        @Column(nullable = false)
+        private String source;
 
-    @Column(nullable = false)
-    private String destination;
+        @Column(nullable = false)
+        private String destination;
 
-    @ManyToOne
-    @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+        @ManyToOne
+        @JoinColumn(name = "vehicle_id", nullable = false)
+        private Vehicle vehicle;
 
-    @ManyToOne
-    @JoinColumn(name = "driver_id", nullable = false)
-    private Driver driver;
+        @ManyToOne
+        @JoinColumn(name = "driver_id", nullable = false)
+        private Driver driver;
 
-    @Column(nullable = false)
-    private Double cargoWeight;
+        @Column(nullable = false)
+        private Double cargoWeight;
 
-    @Column(nullable = false)
-    private Double plannedDistance;
+        @Column(nullable = false)
+        private Double plannedDistance;
 
-    @Column
-    private Double actualDistance;
+        @Column
+        private Double actualDistance;
 
-    @Column
-    private Double revenue;
+        @Column
+        private Double revenue;
 
-    @Column
-    private Double fuelConsumed;
+        @Column
+        private Double fuelConsumed;
 
-    @Column
-    private LocalDate completionDate;
+        @Column
+        private LocalDate completionDate;
 
-    @Column(nullable = false)
-    private LocalDate dispatchDate;
+        @Column(nullable = false)
+        private LocalDate dispatchDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TripStatus status;
-}
+        @Enumerated(EnumType.STRING)
+        @Column(nullable = false)
+        private TripStatus status;
+    }
