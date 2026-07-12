@@ -8,8 +8,8 @@ Built for Odoo Hackathon 2026.
 
 ##  Live Demo
 
-- **App:** https://your-app.up.railway.app
-- **API Docs (Swagger):** https://your-app.up.railway.app/swagger-ui/index.html
+- **App:** https://transitops-production-5c4c.up.railway.app
+- **API Docs (Swagger):** https://transitops-production-5c4c.up.railway.app/swagger-ui/index.html
 
 ### Demo Credentials
 | Email | Password | Role |
