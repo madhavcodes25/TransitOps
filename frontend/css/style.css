@@ -58,3 +58,14 @@
 .toast.bg-danger {
     background-color: #d9534f !important; /* Bootstrap Danger Red */
 }
+
+[data-bs-theme="dark"] .nav-link.active,
+[data-bs-theme="dark"] .nav-link.active:hover,
+[data-bs-theme="dark"] .nav-link.active:focus {
+    color: #ffffff !important;
+    background-color: var(--bs-primary) !important;
+}
+
+[data-bs-theme="dark"] .nav-link:not(.active):hover {
+    color: var(--bs-primary) !important;
+}
